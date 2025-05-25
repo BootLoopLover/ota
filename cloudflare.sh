@@ -1,58 +1,52 @@
 #!/bin/bash
 
-echo "======================================"
-echo "     🔐 Cloudflare Tunnel Setup       "
-echo "======================================"
+echo "=== [1/6] Install cloudflared ==="
+if ! command -v cloudflared &>/dev/null; then
+    curl -s https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install/linux/ | sudo bash
+else
+    echo "✅ cloudflared already installed."
+fi
 
-read -p "Masukkan subdomain yang ingin digunakan (contoh: mypc.pakalolo.me): " SUBDOMAIN
-read -p "Masukkan port lokal yang ingin di-expose (contoh: 80 untuk web, 22 untuk SSH): " PORT
-read -p "Masukkan nama tunnel (bebas, contoh: desktop-tunnel): " TUNNEL_NAME
+echo "=== [2/6] Login ke Cloudflare ==="
+cloudflared login
+if [ $? -ne 0 ]; then
+    echo "❌ Login gagal. Keluar..."
+    exit 1
+fi
 
-# 1. Install cloudflared
-echo "[1/6] Installing cloudflared..."
-sudo apt update
-sudo apt install -y cloudflared || {
-    echo "Gagal install cloudflared."; exit 1;
-}
+echo "=== [3/6] Buat Tunnel Baru ==="
+read -p "Masukkan nama tunnel (misal: desktop-tunnel): " TUNNEL_NAME
+cloudflared tunnel create "$TUNNEL_NAME"
+if [ $? -ne 0 ]; then
+    echo "❌ Gagal membuat tunnel."
+    exit 1
+fi
 
-# 2. Login Cloudflare
-echo "[2/6] Login ke Cloudflare..."
-cloudflared login || {
-    echo "Login Cloudflare gagal."; exit 1;
-}
+TUNNEL_ID=$(cloudflared tunnel list | grep "$TUNNEL_NAME" | awk '{print $1}')
+CRED_FILE="$HOME/.cloudflared/${TUNNEL_ID}.json"
 
-# 3. Create tunnel
-echo "[3/6] Membuat tunnel..."
-cloudflared tunnel create "$TUNNEL_NAME" || {
-    echo "Gagal membuat tunnel."; exit 1;
-}
-
-# 4. Buat file config.yml
-echo "[4/6] Membuat config file..."
+echo "=== [4/6] Buat config.yml ==="
 mkdir -p ~/.cloudflared
-CONFIG_PATH="$HOME/.cloudflared/config.yml"
-CRED_PATH="$HOME/.cloudflared/${TUNNEL_NAME}.json"
-
-cat > "$CONFIG_PATH" <<EOF
-tunnel: $TUNNEL_NAME
-credentials-file: $CRED_PATH
+cat <<EOF > ~/.cloudflared/config.yml
+tunnel: $TUNNEL_ID
+credentials-file: $CRED_FILE
 
 ingress:
-  - hostname: $SUBDOMAIN
-    service: http://localhost:$PORT
+  - hostname: ssh.pakalolo.me
+    service: ssh://localhost:22
   - service: http_status:404
 EOF
 
-# 5. Assign subdomain
-echo "[5/6] Menyambungkan $SUBDOMAIN ke tunnel..."
-cloudflared tunnel route dns "$TUNNEL_NAME" "$SUBDOMAIN"
+echo "✅ Konfigurasi tersimpan di ~/.cloudflared/config.yml"
 
-# 6. Install sebagai systemd service
-echo "[6/6] Mengaktifkan Cloudflare Tunnel sebagai service..."
+echo "=== [5/6] Daftarkan DNS ssh.pakalolo.me ==="
+cloudflared tunnel route dns "$TUNNEL_NAME" ssh.pakalolo.me
+
+echo "=== [6/6] Setup sebagai systemd service ==="
 sudo cloudflared service install
 sudo systemctl enable cloudflared
-sudo systemctl restart cloudflared
+sudo systemctl start cloudflared
 
-echo
-echo "✅ Selesai! Subdomain aktif: https://$SUBDOMAIN"
-echo "🚀 Akses port lokal $PORT kamu sekarang terbuka ke publik melalui Cloudflare."
+echo ""
+echo "✅ Tunnel SSH aktif di: ssh.pakalolo.me"
+echo "🔐 Coba akses: ssh [username]@ssh.pakalolo.me"
