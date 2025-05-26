@@ -3,7 +3,7 @@
 PORT=5001
 TUNNEL_NAME="pakalolo-ota-tunnel-v2"
 CLOUDFLARED_DIR="$HOME/home/paka/.cloudflared"
-CONFIG_FILE="$CLOUDFLARED_DIR/config.yml"
+CONFIG_FILE="$CLOUDFLARED_DIR/home/paka/.cloudflared/config.yml"
 CREDENTIAL_FILE="$CLOUDFLARED_DIR/$TUNNEL_NAME.json"
 
 echo "✅ Menjalankan OTA Server di port $PORT..."
