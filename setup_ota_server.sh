@@ -1,44 +1,41 @@
 #!/bin/bash
 
-# === Konfigurasi awal ===
+PORT=5001
 TUNNEL_NAME="pakalolo-ota-tunnel-v2"
-LOCAL_PORT="5000"
-CONFIG_DIR="$HOME/.cloudflared"
-CONFIG_FILE="$CONFIG_DIR/config.yaml"
+CLOUDFLARED_DIR="$HOME/.cloudflared"
+CONFIG_FILE="$CLOUDFLARED_DIR/config.yml"
+CREDENTIAL_FILE="$CLOUDFLARED_DIR/$TUNNEL_NAME.json"
 
-# === Pastikan cloudflared sudah login ===
-if [ ! -f "$CONFIG_DIR/cert.pem" ]; then
-    echo "Belum login Cloudflare. Membuka login..."
-    cloudflared tunnel login || exit 1
-else
-    echo "Sudah login Cloudflare ✔"
+echo "✅ Menjalankan OTA Server di port $PORT..."
+
+# Jalankan OTA server di background
+nohup python3 ota_server.py $PORT >/dev/null 2>&1 &
+
+# Cek dan buat config.yml jika tidak ada
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "🔄 Membuat config.yml di $CONFIG_FILE..."
+    mkdir -p "$CLOUDFLARED_DIR"
+    cat <<EOF > "$CONFIG_FILE"
+tunnel: $TUNNEL_NAME
+credentials-file: $CREDENTIAL_FILE
+ingress:
+  - hostname: ota.pakalolo.me
+    service: http://localhost:$PORT
+  - service: http_status:404
+EOF
 fi
 
-# === Ambil credentials file ===
-echo "Mengambil credentials untuk tunnel: $TUNNEL_NAME..."
-cloudflared tunnel token "$TUNNEL_NAME" || exit 1
-
-# === Deteksi file credentials JSON ===
-CRED_FILE=$(find "$CONFIG_DIR" -name "*.json" | grep "$(cloudflared tunnel list | grep "$TUNNEL_NAME" | awk '{print $1}')" | head -n1)
-
-if [ ! -f "$CRED_FILE" ]; then
-    echo "❌ Gagal menemukan credentials file untuk tunnel $TUNNEL_NAME"
+# Periksa credential tunnel
+if [ ! -f "$CREDENTIAL_FILE" ]; then
+    echo "❌ Gagal menemukan credential tunnel: $CREDENTIAL_FILE"
+    echo "📌 Jalankan perintah berikut untuk login dan buat ulang tunnel:"
+    echo ""
+    echo "   cloudflared tunnel login"
+    echo "   cloudflared tunnel create $TUNNEL_NAME"
+    echo ""
     exit 1
 fi
 
-echo "✔ Credentials ditemukan: $CRED_FILE"
-
-# === Tulis config.yaml ===
-cat <<EOF > "$CONFIG_FILE"
-tunnel: $TUNNEL_NAME
-credentials-file: $CRED_FILE
-ingress:
-  - service: http://localhost:$LOCAL_PORT
-  - service: http_status:404
-EOF
-
-echo "✔ File config.yaml berhasil ditulis di: $CONFIG_FILE"
-
-# === Jalankan tunnel ===
-echo "🚀 Menjalankan tunnel Cloudflare untuk OTA..."
+# Jalankan Cloudflare Tunnel
+echo "🚀 Menjalankan Cloudflare Tunnel ($TUNNEL_NAME)..."
 cloudflared tunnel run "$TUNNEL_NAME"
