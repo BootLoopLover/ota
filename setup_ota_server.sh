@@ -2,7 +2,7 @@
 
 PORT=5001
 TUNNEL_NAME="pakalolo-ota-tunnel-v2"
-CLOUDFLARED_DIR="$HOME/.cloudflared"
+CLOUDFLARED_DIR="$HOME/home/paka/.cloudflared"
 CONFIG_FILE="$CLOUDFLARED_DIR/config.yml"
 CREDENTIAL_FILE="$CLOUDFLARED_DIR/$TUNNEL_NAME.json"
 
