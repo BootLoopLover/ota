@@ -99,7 +99,7 @@ def serve_firmware(filename):
     return jsonify({"error": "Firmware not found"}), 404
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=5000)
 EOF
 
 # Token database
@@ -144,7 +144,7 @@ cat << 'EOF' > ota-server.sh
 #!/bin/bash
 APP_DIR="/root/ota_server"
 FIRMWARE_DIR="/root/firmware"
-FLASK_PORT=8080
+FLASK_PORT=5000
 NGROK_BIN="/usr/bin/ngrok"
 SESSION="ota_server"
 
