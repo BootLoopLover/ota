@@ -1,6 +1,6 @@
 #!/bin/bash
-APP_DIR="/root/ota_server"
-FIRMWARE_DIR="/root/firmware"
+APP_DIR="/opt/ota_server"
+FIRMWARE_DIR="/opt/ota_server/firmware"
 FLASK_PORT=8080
 NGROK_BIN="/usr/bin/ngrok"
 SESSION="ota_server"
