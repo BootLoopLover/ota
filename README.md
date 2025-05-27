@@ -1,5 +1,5 @@
 ```
-wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && chmod +x ota-update.sh && sudo ./ota-update.sh
+wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && chmod +x ota-update.sh && ./ota-update.sh
 ```
 
 
