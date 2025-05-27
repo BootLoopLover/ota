@@ -2,7 +2,7 @@
 
 APP_DIR="/opt/ota_server"
 FIRMWARE_DIR="/opt/ota_server/firmware"
-FLASK_PORT=8081
+FLASK_PORT=5000
 NGROK_BIN="/usr/bin/ngrok"
 SESSION="ota_server"
 
