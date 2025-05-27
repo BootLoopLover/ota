@@ -5,8 +5,6 @@ FLASK_PORT=8080
 NGROK_BIN="/usr/bin/ngrok"
 SESSION="ota_server"
 
-cd "$APP_DIR"
-
 # Matikan session lama jika ada
 tmux has-session -t $SESSION 2>/dev/null && tmux kill-session -t $SESSION
 echo "📦 Menjalankan server OTA di tmux session: $SESSION"
