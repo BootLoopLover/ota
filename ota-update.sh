@@ -15,7 +15,7 @@ fi
 
 echo "Membuat session tmux baru: $SESSION"
 
-tmux new-session -d -s $SESSION -n flask "cd $APP_DIR && python3 app.py"
+tmux new-session -d -s $SESSION -n flask "cd $APP_DIR && python app.py"
 sleep 3
 tmux new-window -t $SESSION:1 -n ngrok "$NGROK_BIN http $FLASK_PORT"
 
