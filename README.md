@@ -1,5 +1,7 @@
 ```
-wget https://raw.githubusercontent.com/BootLoopLover/ota/main/admin-cli.sh && chmod +x admin-cli.sh && ./admin-cli.sh
+sudo wget https://raw.githubusercontent.com/BootLoopLover/ota/main/admin-cli.sh
+sudo chmod +x admin-cli.sh
+sudo ./admin-cli.sh
 ```
 
 ```
