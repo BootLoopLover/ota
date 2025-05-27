@@ -1,4 +1,8 @@
 ```
+wget https://raw.githubusercontent.com/BootLoopLover/ota/main/admin-cli.sh && chmod +x admin-cli.sh && ./admin-cli.sh
+```
+
+```
 wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && chmod +x ota-update.sh && ./ota-update.sh
 ```
 
