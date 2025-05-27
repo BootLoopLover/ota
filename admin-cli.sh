@@ -2,7 +2,7 @@
 
 FIRMWARE_DIR="/home/paka/Desktop/Firmware"
 APPROVAL_FILE="$FIRMWARE_DIR/approved.json"
-SERVER_URL="http://127.0.0.1:5000"
+SERVER_URL="http://127.0.0.1:4040"
 
 echo "=== OTA ADMIN PANEL ==="
 select bin in $(ls $FIRMWARE_DIR/*.bin 2>/dev/null | xargs -n1 basename); do
