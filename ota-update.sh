@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP_DIR="/opt/ota_server"
-FIRMWARE_DIR="/home/paka/Desktop/Firmware"
+FIRMWARE_DIR="/opt/ota_server/firmware"
 FLASK_PORT=8080
 NGROK_BIN="/usr/bin/ngrok"
 SESSION="ota_server"
