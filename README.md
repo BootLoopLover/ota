@@ -4,7 +4,7 @@ wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && c
 
 
 ```
-wget https://raw.githubusercontent.com/BootLoopLover/ota/main/install.sh && chmod +x install.sh && sudo ./install.sh
+wget https://raw.githubusercontent.com/BootLoopLover/ota/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 
