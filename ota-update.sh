@@ -9,7 +9,7 @@ PYTHON_ENV="$OTA_DIR/venv"
 
 stop_ngrok() {
     echo "[INFO] Mencari dan menghentikan ngrok di port 8000 jika ada..."
-    PIDS=$(lsof -ti tcp:8000)
+    PIDS=$(lsof -ti tcp:5000)
     if [ -n "$PIDS" ]; then
         echo "[INFO] Menemukan proses di port 8000, PID: $PIDS"
         kill $PIDS
@@ -82,8 +82,8 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     threading.Thread(target=auto_shutdown, daemon=True).start()
-    print("[INFO] OTA Server aktif di http://0.0.0.0:8000")
-    app.run(host="0.0.0.0", port=8000)
+    print("[INFO] OTA Server aktif di http://0.0.0.0:5000")
+    app.run(host="0.0.0.0", port=5000)
 EOF
 
 echo "[INFO] Membuat systemd service untuk Flask OTA..."
@@ -117,7 +117,7 @@ server {
     server_name $DOMAIN;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:5000;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
     }
