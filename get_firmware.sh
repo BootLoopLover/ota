@@ -38,7 +38,7 @@ case "$PILIHAN" in
         download_firmware "LedeProject.bin" "LedeProject.bin"
         ;;
     2)
-        download_firmware "PakawrtNssbin" "PakawrtNssbin"
+        download_firmware "PakawrtNss.bin" "PakawrtNss.bin"
         ;;
     0)
         echo "Keluar."
