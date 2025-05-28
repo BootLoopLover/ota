@@ -10,6 +10,7 @@ wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && c
 
 # Opsi 1: Hapus dulu file lama
 ```
+rm -f get_firmware.sh
 wget https://raw.githubusercontent.com/BootLoopLover/ota/main/get_firmware.sh && chmod +x get_firmware.sh && ./get_firmware.sh
 ```
 
