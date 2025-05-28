@@ -1,37 +1,49 @@
 #!/bin/sh
 
-SERVER_URL="https://2658-68-183-229-11.ngrok-free.app/firmware"  # ganti dengan URL aktif
+echo "============================="
+echo "   OTA Firmware Downloader"
+echo "============================="
+echo ""
+echo "Pilih firmware yang ingin diunduh:"
+echo "1) PakaWRT NSS Build"
+echo "2) Lede Project Build"
+echo ""
 
-show_menu() {
-  echo "============================"
-  echo "1) LedeProject.bin"
-  echo "2) PakawrtNss.bin"
-  echo "0) Keluar"
-  echo "----------------------------"
-  echo -n "Pilih file firmware [1-2]: "
-}
+read -p "Masukkan pilihan (1/2): " pilihan
 
-download_firmware() {
-  FILE_NAME="$1"
-  for i in 1 2 3; do
-    echo "📥 Downloading $FILE_NAME (attempt $i/3)..."
-    curl -fLo "$FILE_NAME" "$SERVER_URL/$FILE_NAME" && {
-      echo "✅ Berhasil download $FILE_NAME"
-      return 0
-    }
-    echo "⚠️  Gagal download $FILE_NAME, mencoba lagi..."
-    sleep 2
-  done
-  echo "❌ Gagal mengunduh $FILE_NAME setelah 3 kali percobaan."
-}
+case "$pilihan" in
+  1)
+    URL="https://f941-68-183-229-11.ngrok-free.app/firmware/PakawrtNss.bin"
+    ;;
+  2)
+    URL="https://f941-68-183-229-11.ngrok-free.app/firmware/LedeProject.bin"
+    ;;
+  *)
+    echo "[ERROR] Pilihan tidak valid."
+    exit 1
+    ;;
+esac
 
-while true; do
-  show_menu
-  read pilihan
-  case $pilihan in
-    1) download_firmware "LedeProject.bin"; break ;;
-    2) download_firmware "PakawrtNss.bin"; break ;;
-    0) echo "Keluar."; break ;;
-    *) echo "❌ Pilihan tidak valid." ;;
-  esac
-done
+DEST="/tmp/firmware.bin"
+
+echo ""
+echo "[INFO] Mengunduh firmware dari:"
+echo "$URL"
+echo ""
+
+curl -L "$URL" -o "$DEST"
+
+if [ $? -ne 0 ]; then
+  echo "[ERROR] Gagal mengunduh firmware."
+  exit 1
+fi
+
+SIZE=$(stat -c%s "$DEST")
+if [ "$SIZE" -lt 3000000 ]; then
+  echo "[ERROR] Ukuran file terlalu kecil ($SIZE bytes), kemungkinan gagal download."
+  exit 1
+fi
+
+echo ""
+echo "[SUKSES] Firmware berhasil diunduh ke: $DEST"
+echo "Silakan jalankan 'sysupgrade /tmp/firmware.bin' jika ingin melakukan flashing."
