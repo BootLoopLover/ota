@@ -8,6 +8,19 @@ OTA_DIR="/opt/ota_server"
 FIRMWARE_DIR="$OTA_DIR/firmware"
 PYTHON_ENV="$OTA_DIR/venv"
 
+stop_ngrok() {
+    echo "[INFO] Mencari dan menghentikan ngrok di port 8000 jika ada..."
+    PIDS=$(lsof -ti tcp:8000)
+    if [ -n "$PIDS" ]; then
+        echo "[INFO] Menemukan ngrok/ proses lain di port 8000, PID: $PIDS"
+        kill $PIDS
+        sleep 2
+        echo "[INFO] Proses di port 8000 sudah dihentikan."
+    else
+        echo "[INFO] Tidak ada proses di port 8000."
+    fi
+}
+
 echo "[INFO] Membuat direktori OTA..."
 sudo mkdir -p "$FIRMWARE_DIR"
 sudo chown -R $USER:$USER "$OTA_DIR"
