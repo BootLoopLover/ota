@@ -5,8 +5,9 @@ echo "   OTA Firmware Downloader"
 echo "============================="
 echo ""
 echo "Pilih firmware yang ingin diunduh:"
-echo "1) PakaWRT NSS Build"
-echo "2) Lede Project Build"
+echo "1) PakaWRT NSS"
+echo "2) PakaWRT NSS Lite"
+echo "3) Lede Project"
 echo ""
 
 read -p "Masukkan pilihan (1/2): " pilihan
@@ -16,6 +17,9 @@ case "$pilihan" in
     URL="https://f941-68-183-229-11.ngrok-free.app/firmware/PakawrtNss.bin"
     ;;
   2)
+    URL="https://f941-68-183-229-11.ngrok-free.app/firmware/PakawrtNssLite.bin"
+    ;;
+  3)
     URL="https://f941-68-183-229-11.ngrok-free.app/firmware/LedeProject.bin"
     ;;
   *)
