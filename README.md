@@ -1,8 +1,4 @@
-```
-sudo wget https://raw.githubusercontent.com/BootLoopLover/ota/main/admin-cli.sh
-sudo chmod +x admin-cli.sh
-sudo ./admin-cli.sh
-```
+
 
 ```
 wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && chmod +x ota-update.sh && ./ota-update.sh
