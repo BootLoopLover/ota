@@ -8,6 +8,9 @@ sudo ./admin-cli.sh
 wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && chmod +x ota-update.sh && ./ota-update.sh
 ```
 
+```
+wget https://raw.githubusercontent.com/BootLoopLover/ota/main/get_firmware.sh && chmod +x get_firmware.sh && ./get_firmware.sh
+```
 
 ```
 wget https://raw.githubusercontent.com/BootLoopLover/ota/main/install.sh && chmod +x install.sh && ./install.sh
