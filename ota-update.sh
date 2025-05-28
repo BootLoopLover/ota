@@ -1,42 +1,119 @@
 #!/bin/bash
 
-APP_DIR="/opt/ota_server"
-FIRMWARE_DIR="/opt/ota_server/firmware"
-FLASK_PORT=5000
-NGROK_BIN="/usr/bin/ngrok"
-SESSION="ota_server"
+set -e
 
-# Hentikan session lama kalau ada
-tmux has-session -t $SESSION 2>/dev/null && tmux kill-session -t $SESSION
+# Konfigurasi domain kamu
+DOMAIN="ota.pakalolo.me"
+OTA_DIR="/opt/ota_server"
+FIRMWARE_DIR="$OTA_DIR/firmware"
+PYTHON_ENV="$OTA_DIR/venv"
 
-echo "Membuat session tmux baru: $SESSION"
-tmux new-session -d -s $SESSION -n flask "cd $APP_DIR && python3 app.py"
-sleep 3
-tmux new-window -t $SESSION:1 -n ngrok "$NGROK_BIN http $FLASK_PORT"
+echo "[INFO] Membuat direktori OTA..."
+sudo mkdir -p "$FIRMWARE_DIR"
+sudo chown -R $USER:$USER "$OTA_DIR"
 
-echo "Menunggu ngrok tunnel siap..."
-NGROK_URL=""
-TIMEOUT=20
-COUNT=0
+echo "[INFO] Menginstal dependency (Python + Flask + NGINX)..."
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv nginx
 
-while [[ -z "$NGROK_URL" && $COUNT -lt $TIMEOUT ]]; do
-    sleep 1
-    NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels \
-        | grep -o 'https://[a-zA-Z0-9.-]*\.ngrok-free\.app' | head -n1)
-    ((COUNT++))
-done
+echo "[INFO] Membuat virtualenv dan instal Flask..."
+python3 -m venv "$PYTHON_ENV"
+source "$PYTHON_ENV/bin/activate"
+pip install flask
+deactivate
 
-if [[ -n "$NGROK_URL" ]]; then
-    echo "✅ OTA Server Aktif di: $NGROK_URL"
-    echo "🔗 URL Firmware dengan token approval:"
-    for f in "$FIRMWARE_DIR"/*.bin; do
-        file_name=$(basename "$f")
-        echo "   - $file_name → Token harus diset via /register"
-    done
-else
-    echo "❌ Gagal mendapatkan URL ngrok setelah $TIMEOUT detik."
-fi
+echo "[INFO] Membuat app.py OTA server..."
+cat > "$OTA_DIR/app.py" << 'EOF'
+from flask import Flask, send_from_directory
+import os
+import signal
+import sys
+import threading
+import time
+
+app = Flask(__name__)
+FIRMWARE_FOLDER = "/opt/ota_server/firmware"
+
+@app.route("/")
+def home():
+    try:
+        files = os.listdir(FIRMWARE_FOLDER)
+    except FileNotFoundError:
+        files = []
+    links = "".join(
+        f'<li><a href="/firmware/{filename}" target="_blank">{filename}</a></li>'
+        for filename in files
+    )
+    return f"""
+    <h2>🔧 OTA Server Aktif (Tanpa Token)</h2>
+    <p>Silakan unduh firmware dari link berikut:</p>
+    <ul>
+        {links}
+    </ul>
+    """
+
+@app.route("/firmware/<filename>")
+def get_firmware(filename):
+    return send_from_directory(FIRMWARE_FOLDER, filename)
+
+def signal_handler(sig, frame):
+    print("\n[INFO] Server dihentikan dengan aman. Keluar.")
+    sys.exit(0)
+
+def auto_shutdown(timeout=600):
+    print(f"[INFO] Server akan berhenti otomatis setelah {timeout} detik.")
+    time.sleep(timeout)
+    print("[INFO] Waktu habis. Server dimatikan otomatis.")
+    os._exit(0)
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    threading.Thread(target=auto_shutdown, daemon=True).start()
+    print("[INFO] OTA Server aktif di http://0.0.0.0:8000")
+    app.run(host="0.0.0.0", port=8000)
+EOF
+
+echo "[INFO] Membuat systemd service untuk Flask OTA..."
+sudo tee /etc/systemd/system/ota-server.service > /dev/null << EOF
+[Unit]
+Description=OTA Flask Server
+After=network.target
+
+[Service]
+User=$USER
+WorkingDirectory=$OTA_DIR
+ExecStart=$PYTHON_ENV/bin/python app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "[INFO] Menyalakan layanan ota-server..."
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable ota-server
+sudo systemctl start ota-server
+
+echo "[INFO] Konfigurasi NGINX untuk domain $DOMAIN..."
+sudo tee /etc/nginx/sites-available/ota > /dev/null << EOF
+server {
+    listen 80;
+    server_name $DOMAIN;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+EOF
+
+sudo ln -sf /etc/nginx/sites-available/ota /etc/nginx/sites-enabled/ota
+sudo nginx -t && sudo systemctl reload nginx
 
 echo ""
-echo "Pantau proses dengan:  tmux attach-session -t $SESSION"
-echo "Hentikan server dengan: tmux kill-session -t $SESSION"
+echo "[✅ SELESAI] OTA Server aktif di http://$DOMAIN"
+echo "📂 Folder firmware: $FIRMWARE_DIR"
+echo "➡ Tambahkan file .bin ke situ agar bisa diunduh."
