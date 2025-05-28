@@ -2,7 +2,6 @@
 
 set -e
 
-# Konfigurasi domain kamu
 DOMAIN="ota.pakalolo.me"
 OTA_DIR="/opt/ota_server"
 FIRMWARE_DIR="$OTA_DIR/firmware"
@@ -12,7 +11,7 @@ stop_ngrok() {
     echo "[INFO] Mencari dan menghentikan ngrok di port 8000 jika ada..."
     PIDS=$(lsof -ti tcp:8000)
     if [ -n "$PIDS" ]; then
-        echo "[INFO] Menemukan ngrok/ proses lain di port 8000, PID: $PIDS"
+        echo "[INFO] Menemukan proses di port 8000, PID: $PIDS"
         kill $PIDS
         sleep 2
         echo "[INFO] Proses di port 8000 sudah dihentikan."
@@ -102,6 +101,8 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOF
+
+stop_ngrok
 
 echo "[INFO] Menyalakan layanan ota-server..."
 sudo systemctl daemon-reexec
