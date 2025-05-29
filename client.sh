@@ -1,27 +1,40 @@
 #!/bin/sh
-# client.sh - Simple OTA update client for PakaWRT
 
-BASE_URL="https://ota.pakawrt.me"
+OTA_SERVER="https://ota.pakawrt.me"  # ganti sesuai URL server OTA kamu
 
 echo "=== PakaWRT OTA Client ==="
-echo "Masukkan username Telegram kamu:"
-read -r USERNAME
+echo -n "Masukkan username Telegram kamu (tanpa @): "
+read USERNAME
 
 if [ -z "$USERNAME" ]; then
   echo "Username tidak boleh kosong!"
   exit 1
 fi
 
-echo "Memeriksa token username: $USERNAME ..."
+# Cek token di server (misal endpoint: /check_token?user=USERNAME)
+CHECK_URL="$OTA_SERVER/check_token?user=$USERNAME"
 
-# Request token info dari server (contoh endpoint)
-RESPONSE=$(wget -qO- "$BASE_URL/api/check_token?user=$USERNAME")
+echo "Memeriksa status token untuk user '$USERNAME'..."
 
-if echo "$RESPONSE" | grep -q "approved"; then
-  echo "Token sudah approved. Daftar firmware tersedia:"
-  wget -qO- "$BASE_URL/api/firmware_list" | tee /tmp/firmware_list.txt
-  echo "Silakan pilih firmware yang ingin diunduh."
-else
-  echo "Token belum disetujui. Silakan hubungi admin di:"
-  echo "https://t.me/PakaloloWaras0"
-fi
+STATUS=$(wget -qO- "$CHECK_URL" 2>/dev/null)
+# Contoh response server:
+# {"status":"pending"}  atau {"status":"approved"} atau {"status":"not_found"}
+
+case "$STATUS" in
+  *"approved"*)
+    echo "Token sudah di-approve! Berikut daftar firmware tersedia:"
+    # Ambil daftar firmware dari server (misal /firmware_list)
+    wget -qO- "$OTA_SERVER/firmware_list" | sed 's/^/ - /'
+    ;;
+  *"pending"*)
+    echo "Token kamu masih dalam proses approval. Silakan hubungi admin:"
+    echo "Telegram: https://t.me/PakaloloWaras0"
+    ;;
+  *"not_found"*)
+    echo "Token tidak ditemukan. Silakan registrasi terlebih dahulu melalui admin."
+    echo "Telegram: https://t.me/PakaloloWaras0"
+    ;;
+  *)
+    echo "Terjadi kesalahan saat memeriksa status token."
+    ;;
+esac
