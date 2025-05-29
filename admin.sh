@@ -4,7 +4,7 @@ SERVER="https://ota.pakawrt.me"
 
 echo "=== PakaWRT OTA Admin Panel ==="
 
-# Ambil daftar user yang terdaftar
+# Ambil daftar user yang terdaftar dan belum approved
 REGISTERED_JSON=$(curl -s "$SERVER/registered")
 
 if [ -z "$REGISTERED_JSON" ] || [ "$REGISTERED_JSON" = "{}" ]; then
@@ -44,7 +44,7 @@ fi
 
 SELECTED_USER="${USER_LIST[$INDEX]}"
 
-echo "Approve user $SELECTED_USER? (y/n): "
+echo -n "Approve user $SELECTED_USER? (y/n): "
 read CONFIRM
 
 if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
