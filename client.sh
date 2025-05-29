@@ -2,22 +2,42 @@
 
 SERVER="https://ota.pakawrt.me"
 
-echo -n "Username Telegram: "
+echo "=== PakaWRT OTA Client ==="
+echo -n "Masukkan username Telegram kamu: "
 read USER
 
 STATUS=$(curl -s "$SERVER/status/$USER" | grep -o '"status":"[^"]*"' | cut -d':' -f2 | tr -d '"')
 
 if [ "$STATUS" != "approved" ]; then
-    echo "❌ Belum di-approve. Hubungi admin @PakaloloWaras0"
+    echo "❌ Username *$USER* belum di-approve."
+    echo "Silakan hubungi admin di Telegram: @PakaloloWaras0"
     exit 1
 fi
 
-echo "✅ Approved. Mendapatkan daftar firmware..."
-curl -s "$SERVER/firmware_list/$USER" | jq -r '.[]' | nl
+echo "✅ Username $USER sudah di-approve."
+echo "Mengambil daftar firmware..."
 
-echo -n "Pilih nomor firmware: "
+LIST=$(curl -s "$SERVER/firmware_list_raw")
+
+if [ -z "$LIST" ]; then
+    echo "⚠️  Tidak ada firmware tersedia."
+    exit 1
+fi
+
+echo "$LIST" | nl
+echo -n "Pilih nomor firmware yang ingin diunduh: "
 read NUM
 
-FILE=$(curl -s "$SERVER/firmware_list/$USER" | jq -r ".[$((NUM-1))]")
+FILE=$(echo "$LIST" | sed -n "${NUM}p")
 
+if [ -z "$FILE" ]; then
+    echo "❌ Nomor tidak valid!"
+    exit 1
+fi
+
+echo "📥 Mengunduh firmware: $FILE ..."
 curl -O "$SERVER/firmware/$FILE"
+
+# Hapus skrip ini sendiri
+SCRIPT_PATH=$(realpath "$0")
+[ -f "$SCRIPT_PATH" ] && echo "🧹 Menghapus skrip..." && rm -f "$SCRIPT_PATH"
