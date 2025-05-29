@@ -6,6 +6,9 @@ wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota-update.sh && c
 ```
 wget https://raw.githubusercontent.com/BootLoopLover/ota/main/client.sh && chmod +x client.sh && ./client.sh
 ```
+```
+wget https://raw.githubusercontent.com/BootLoopLover/ota/main/admin.sh && chmod +x admin.sh && ./admin.sh
+```
 
 ```
 wget https://raw.githubusercontent.com/BootLoopLover/ota/main/ota.sh && chmod +x ota.sh && ./ota.sh
