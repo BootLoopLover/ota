@@ -1,40 +1,43 @@
 #!/bin/sh
 
-OTA_SERVER="https://ota.pakawrt.me"  # ganti sesuai URL server OTA kamu
+SERVER="https://ota.pakawrt.me"
 
 echo "=== PakaWRT OTA Client ==="
-echo -n "Masukkan username Telegram kamu (tanpa @): "
+echo -n "Masukkan username Telegram kamu: "
 read USERNAME
 
 if [ -z "$USERNAME" ]; then
-  echo "Username tidak boleh kosong!"
-  exit 1
+    echo "Username tidak boleh kosong."
+    exit 1
 fi
 
-# Cek token di server (misal endpoint: /check_token?user=USERNAME)
-CHECK_URL="$OTA_SERVER/check_token?user=$USERNAME"
+echo "Cek status approval untuk user $USERNAME..."
+STATUS=$(curl -s "$SERVER/status/$USERNAME" | grep -o '"status":"[^"]*"' | cut -d':' -f2 | tr -d '"')
 
-echo "Memeriksa status token untuk user '$USERNAME'..."
+if [ "$STATUS" != "approved" ]; then
+    echo "User belum disetujui admin. Silakan hubungi admin @PakaloloWaras0 di Telegram."
+    exit 1
+fi
 
-STATUS=$(wget -qO- "$CHECK_URL" 2>/dev/null)
-# Contoh response server:
-# {"status":"pending"}  atau {"status":"approved"} atau {"status":"not_found"}
+echo "User sudah disetujui. Mengambil daftar firmware..."
+curl -s "$SERVER/firmware_list/$USERNAME" | jq -r '.[]' | nl
 
-case "$STATUS" in
-  *"approved"*)
-    echo "Token sudah di-approve! Berikut daftar firmware tersedia:"
-    # Ambil daftar firmware dari server (misal /firmware_list)
-    wget -qO- "$OTA_SERVER/firmware_list" | sed 's/^/ - /'
-    ;;
-  *"pending"*)
-    echo "Token kamu masih dalam proses approval. Silakan hubungi admin:"
-    echo "Telegram: https://t.me/PakaloloWaras0"
-    ;;
-  *"not_found"*)
-    echo "Token tidak ditemukan. Silakan registrasi terlebih dahulu melalui admin."
-    echo "Telegram: https://t.me/PakaloloWaras0"
-    ;;
-  *)
-    echo "Terjadi kesalahan saat memeriksa status token."
-    ;;
-esac
+echo -n "Masukkan nomor firmware yang ingin diunduh: "
+read NO
+
+if ! echo "$NO" | grep -q '^[0-9]\+$'; then
+    echo "Input salah."
+    exit 1
+fi
+
+FIRMWARE=$(curl -s "$SERVER/firmware_list/$USERNAME" | jq -r ".[$((NO-1))]")
+
+if [ -z "$FIRMWARE" ] || [ "$FIRMWARE" = "null" ]; then
+    echo "Pilihan firmware tidak valid."
+    exit 1
+fi
+
+echo "Mengunduh firmware $FIRMWARE ..."
+curl -O "$SERVER/firmware/$FIRMWARE"
+
+echo "Selesai."
