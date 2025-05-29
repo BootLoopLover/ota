@@ -2,42 +2,22 @@
 
 SERVER="https://ota.pakawrt.me"
 
-echo "=== PakaWRT OTA Client ==="
-echo -n "Masukkan username Telegram kamu: "
-read USERNAME
+echo -n "Username Telegram: "
+read USER
 
-if [ -z "$USERNAME" ]; then
-    echo "Username tidak boleh kosong."
-    exit 1
-fi
-
-echo "Cek status approval untuk user $USERNAME..."
-STATUS=$(curl -s "$SERVER/status/$USERNAME" | grep -o '"status":"[^"]*"' | cut -d':' -f2 | tr -d '"')
+STATUS=$(curl -s "$SERVER/status/$USER" | grep -o '"status":"[^"]*"' | cut -d':' -f2 | tr -d '"')
 
 if [ "$STATUS" != "approved" ]; then
-    echo "User belum disetujui admin. Silakan hubungi admin @PakaloloWaras0 di Telegram."
+    echo "❌ Belum di-approve. Hubungi admin @PakaloloWaras0"
     exit 1
 fi
 
-echo "User sudah disetujui. Mengambil daftar firmware..."
-curl -s "$SERVER/firmware_list/$USERNAME" | jq -r '.[]' | nl
+echo "✅ Approved. Mendapatkan daftar firmware..."
+curl -s "$SERVER/firmware_list/$USER" | jq -r '.[]' | nl
 
-echo -n "Masukkan nomor firmware yang ingin diunduh: "
-read NO
+echo -n "Pilih nomor firmware: "
+read NUM
 
-if ! echo "$NO" | grep -q '^[0-9]\+$'; then
-    echo "Input salah."
-    exit 1
-fi
+FILE=$(curl -s "$SERVER/firmware_list/$USER" | jq -r ".[$((NUM-1))]")
 
-FIRMWARE=$(curl -s "$SERVER/firmware_list/$USERNAME" | jq -r ".[$((NO-1))]")
-
-if [ -z "$FIRMWARE" ] || [ "$FIRMWARE" = "null" ]; then
-    echo "Pilihan firmware tidak valid."
-    exit 1
-fi
-
-echo "Mengunduh firmware $FIRMWARE ..."
-curl -O "$SERVER/firmware/$FIRMWARE"
-
-echo "Selesai."
+curl -O "$SERVER/firmware/$FILE"
